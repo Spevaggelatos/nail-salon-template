@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: #fbfcfa;
+    --foreground: #162021;
+    
+    /* ELLO BEAUTY Signature Aqua / Cyan / Turquoise Palette */
+    --brand-50: #f0f9fa;
+    --brand-100: #dcf2f4;
+    --brand-200: #bee6ea;
+    --brand-300: #91dbe0;
+    --brand-400: #62b5be;
+    --brand-500: #48a3ad;
+    --brand-600: #3b8e97;
+    --brand-700: #33737b;
+    --brand-800: #2d5e64;
+    --brand-900: #244b50;
+    
+    /* Warm Champagne / Gold Accent */
+    --gold-100: #fbf8f0;
+    --gold-300: #eddba6;
+    --gold-500: #c9a44c;
+    --gold-600: #ab8534;
+
+    /* Card & Surfaces */
+    --card-bg: #ffffff;
+    --card-border: #e6f3f4;
+    --text-muted: #5e6d70;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-serif-luxury {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f9fa;
+}
+::-webkit-scrollbar-thumb {
+  background: #bee6ea;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #91dbe0;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
