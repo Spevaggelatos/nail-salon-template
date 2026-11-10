@@ -59,7 +59,7 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
           </a>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden lg:flex items-center space-x-6">
+          <nav className="hidden lg:flex items-center space-x-8">
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -72,7 +72,7 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
           </nav>
 
           {/* Actions: Call & Book Button */}
-          <div className="hidden sm:flex items-center space-x-3">
+          <div className="hidden sm:flex items-center space-x-3 lg:ml-6">
             <a
               href={`tel:${salonConfig.contact.phone.replace(/\s+/g, "")}`}
               className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-[#603C37] hover:bg-[#F7EDEA] rounded-full transition-all border border-[#EFDDD8]"
