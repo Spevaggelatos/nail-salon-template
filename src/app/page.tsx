@@ -31,7 +31,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FBFCFA] text-[#162021]">
+    <div className="min-h-screen flex flex-col bg-[#FDFBFB] text-[#1C1514]">
       {/* Top Announcement Bar */}
       <AnnouncementBar onOpenBooking={() => handleOpenBooking()} />
 

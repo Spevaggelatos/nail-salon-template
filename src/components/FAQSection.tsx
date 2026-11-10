@@ -17,15 +17,15 @@ export default function FAQSection() {
         
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#DCF2F4] text-[#244B50] text-xs font-semibold mb-3 border border-[#BEE6EA]">
-            <HelpCircle className="w-3.5 h-3.5 text-[#3B8E97]" />
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#F7EDEA] text-[#603C37] text-xs font-semibold mb-3 border border-[#EFDDD8]">
+            <HelpCircle className="w-3.5 h-3.5 text-[#A66D64]" />
             <span>Συχνές Απορίες</span>
           </div>
-          <h2 className="font-serif-luxury text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#162021]">
+          <h2 className="font-serif-luxury text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#1C1514]">
             Συχνές Ερωτήσεις
           </h2>
-          <p className="text-sm text-[#5E6D70] mt-2">
-            Όλα όσα θέλετε να γνωρίζετε πριν από την επίσκεψή σας στο ELLO BEAUTY.
+          <p className="text-sm text-[#6B5C59] mt-2">
+            Όλα όσα θέλετε να γνωρίζετε πριν από την επίσκεψή σας στο Neta Nails.
           </p>
         </div>
 
@@ -36,24 +36,24 @@ export default function FAQSection() {
             return (
               <div
                 key={index}
-                className="border border-[#E6F3F4] rounded-2xl overflow-hidden transition-all duration-200"
+                className="border border-[#F3E9E6] rounded-2xl overflow-hidden transition-all duration-200"
               >
                 <button
                   onClick={() => toggle(index)}
-                  className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 bg-[#FBFCFA] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
+                  className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 bg-[#FDFBFB] hover:bg-[#FBF6F5] transition-colors cursor-pointer"
                 >
-                  <span className="font-serif-luxury text-lg sm:text-xl font-bold text-[#162021]">
+                  <span className="font-serif-luxury text-lg sm:text-xl font-bold text-[#1C1514]">
                     {faq.question}
                   </span>
                   <ChevronDown
-                    className={`w-5 h-5 text-[#3B8E97] transition-transform duration-300 flex-shrink-0 ${
+                    className={`w-5 h-5 text-[#A66D64] transition-transform duration-300 flex-shrink-0 ${
                       isOpen ? "rotate-180" : ""
                     }`}
                   />
                 </button>
 
                 {isOpen && (
-                  <div className="p-5 sm:p-6 pt-0 bg-[#FBFCFA] text-sm text-[#5E6D70] leading-relaxed border-t border-[#E6F3F4]">
+                  <div className="p-5 sm:p-6 pt-0 bg-[#FDFBFB] text-sm text-[#6B5C59] leading-relaxed border-t border-[#F3E9E6]">
                     {faq.answer}
                   </div>
                 )}

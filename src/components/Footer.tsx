@@ -6,17 +6,17 @@ import { InstagramIcon, FacebookIcon } from "./SocialIcons";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#121A1B] text-[#CCD8DA] pt-16 pb-24 sm:pb-12 border-t border-stone-800">
+    <footer className="bg-[#1A1413] text-[#D8CECC] pt-16 pb-24 sm:pb-12 border-t border-stone-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-stone-800">
           {/* Brand Col */}
           <div className="md:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white p-1 overflow-hidden flex items-center justify-center">
+              <div className="w-11 h-11 rounded-xl bg-white p-0.5 overflow-hidden flex items-center justify-center">
                 <img
                   src={salonConfig.business.logoUrl}
                   alt={`${salonConfig.business.name} Logo`}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover rounded-lg"
                 />
               </div>
               <h3 className="font-serif-luxury text-3xl font-semibold text-white tracking-wide">
@@ -32,7 +32,7 @@ export default function Footer() {
                 href={salonConfig.contact.socials.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-stone-800 hover:bg-[#3B8E97] text-stone-300 hover:text-white flex items-center justify-center transition-colors"
+                className="w-9 h-9 rounded-full bg-stone-800 hover:bg-[#A66D64] text-stone-300 hover:text-white flex items-center justify-center transition-colors"
                 aria-label="Instagram"
               >
                 <InstagramIcon className="w-4 h-4" />
@@ -41,7 +41,7 @@ export default function Footer() {
                 href={salonConfig.contact.socials.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-stone-800 hover:bg-[#3B8E97] text-stone-300 hover:text-white flex items-center justify-center transition-colors"
+                className="w-9 h-9 rounded-full bg-stone-800 hover:bg-[#A66D64] text-stone-300 hover:text-white flex items-center justify-center transition-colors"
                 aria-label="Facebook"
               >
                 <FacebookIcon className="w-4 h-4" />
@@ -62,12 +62,12 @@ export default function Footer() {
               </li>
               <li>
                 <a href="#features" className="hover:text-white transition-colors">
-                  Γιατί ELLO BEAUTY
+                  Γιατί Neta Nails
                 </a>
               </li>
               <li>
                 <a href="#gallery" className="hover:text-white transition-colors">
-                  Instagram Lookbook
+                  Instagram Portfolio
                 </a>
               </li>
               <li>
@@ -94,7 +94,7 @@ export default function Footer() {
               Επικοινωνία
             </h4>
             <div className="space-y-2 text-xs sm:text-sm text-stone-400">
-              <p>📍 {salonConfig.contact.address.street}, {salonConfig.contact.address.area}</p>
+              <p>📍 {salonConfig.contact.address.street}</p>
               <p>🏙️ {salonConfig.contact.address.city} {salonConfig.contact.address.postalCode}</p>
               <p>📞 {salonConfig.contact.phone}</p>
               <p>📸 Instagram: {salonConfig.contact.socials.instagramHandle}</p>
@@ -109,7 +109,7 @@ export default function Footer() {
             © {salonConfig.business.name}. Με επιφύλαξη παντός δικαιώματος.
           </p>
           <p className="flex items-center gap-1 justify-center">
-            Σχεδιασμένο με <Heart className="w-3.5 h-3.5 text-[#3B8E97] fill-[#3B8E97]" /> για σύγχρονα beauty salons.
+            Σχεδιασμένο με <Heart className="w-3.5 h-3.5 text-[#A66D64] fill-[#A66D64]" /> για σύγχρονα beauty lounges.
           </p>
         </div>
       </div>

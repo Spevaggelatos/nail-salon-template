@@ -4,18 +4,20 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: `${salonConfig.business.name} | ${salonConfig.business.tagline}`,
-  description: `${salonConfig.business.name} - ${salonConfig.business.subtitle}. Κλείστε online το ραντεβού σας για μανικιούρ, πεντικιούρ, acrygel και nail art.`,
+  description: `${salonConfig.business.name} - ${salonConfig.business.subtitle}. Κλείστε online το ραντεβού σας για μανικιούρ, πεντικιούρ, dipping, τεχνητά νύχια και lash lift.`,
   keywords: [
     salonConfig.business.name,
-    "νυχάδικο",
-    "μανικιούρ",
+    "neta nails",
+    "νυχάδικο χολαργός",
+    "μανικιούρ χολαργός",
     "πεντικιούρ",
     "τεχνητά νύχια",
     "ημιμόνιμο",
-    "spa pedicure",
-    "nail salon",
+    "dipping",
+    "lash lift",
+    "nail studio",
     salonConfig.contact.address.city,
-    salonConfig.contact.address.area,
+    salonConfig.contact.address.street,
   ],
   authors: [{ name: salonConfig.business.name }],
   openGraph: {
@@ -25,9 +27,9 @@ export const metadata: Metadata = {
     type: "website",
   },
   icons: {
-    icon: "/images/ellobeauty_logo_small.svg",
-    shortcut: "/images/ellobeauty_logo_small.svg",
-    apple: "/images/ellobeauty_logo_small.svg",
+    icon: "/images/netanails/logo.jpg",
+    shortcut: "/images/netanails/logo.jpg",
+    apple: "/images/netanails/logo.jpg",
   },
 };
 
@@ -50,7 +52,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#FBFCFA] text-[#162021] antialiased selection:bg-[#BEE6EA] selection:text-[#244B50]">
+      <body className="min-h-screen flex flex-col bg-[#FDFBFB] text-[#1C1514] antialiased selection:bg-[#EFDDD8] selection:text-[#603C37]">
         {children}
       </body>
     </html>
