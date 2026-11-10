@@ -4,8 +4,18 @@ export interface ServiceItem {
   name: string;
   description: string;
   duration: string;
+  durationMinutes: number; // e.g. 30, 45, 60, 90, 120
   price: string;
   popular?: boolean;
+}
+
+export interface StaffMember {
+  id: string;
+  name: string;
+  role: string;
+  avatar?: string;
+  categoryIds: string[]; // which categories they handle
+  googleCalendarId?: string; // e.g. "tech1@group.calendar.google.com" or "primary"
 }
 
 export interface ServiceCategory {
@@ -81,6 +91,46 @@ export const salonConfig = {
     { days: "Σάββατο", hours: "09:00 - 17:00" },
     { days: "Κυριακή", hours: "Κλειστά" },
   ],
+
+  // --- ΡΥΘΜΙΣΕΙΣ ΚΡΑΤΗΣΕΩΝ & ΗΜΕΡΟΛΟΓΙΟΥ ---
+  bookingConfig: {
+    slotIntervalMinutes: 30, // Βήμα υπολογισμού slots (ανά 30 λεπτά)
+    bufferMinutes: 0, // Χρόνος καθαρισμού/αποστείρωσης ανάμεσα σε ραντεβού
+    scheduleByDay: {
+      0: null, // Κυριακή: Κλειστά
+      1: null, // Δευτέρα: Κλειστά
+      2: { open: "10:00", close: "20:00" }, // Τρίτη
+      3: { open: "10:00", close: "20:00" }, // Τετάρτη
+      4: { open: "10:00", close: "20:00" }, // Πέμπτη
+      5: { open: "10:00", close: "20:00" }, // Παρασκευή
+      6: { open: "09:00", close: "17:00" }, // Σάββατο
+    } as Record<number, { open: string; close: string } | null>,
+  },
+
+  // --- ΟΜΑΔΑ & ΤΕΧΝΙΤΡΙΕΣ (STAFF / CALENDARS) ---
+  staff: [
+    {
+      id: "anna",
+      name: "Άννα",
+      role: "Senior Nail Artist (Gel & Dipping)",
+      categoryIds: ["manicure", "pedicure"],
+      googleCalendarId: process.env.GOOGLE_CALENDAR_ID_ANNA || "primary",
+    },
+    {
+      id: "maria",
+      name: "Μαρία",
+      role: "Nail & Pedicure Specialist",
+      categoryIds: ["manicure", "pedicure"],
+      googleCalendarId: process.env.GOOGLE_CALENDAR_ID_MARIA || "primary",
+    },
+    {
+      id: "eleni",
+      name: "Ελένη",
+      role: "Lashes, Brows & Body Specialist",
+      categoryIds: ["brows-lashes", "waxing-massage"],
+      googleCalendarId: process.env.GOOGLE_CALENDAR_ID_ELENI || "primary",
+    },
+  ] as StaffMember[],
 
   // --- ΧΡΩΜΑΤΙΚΟ ΣΤΥΛ & THEME ---
   theme: {
@@ -164,6 +214,7 @@ export const salonConfig = {
       name: "Manicure Express",
       description: "Γρήγορη και αποτελεσματική περιποίηση νυχιών και απλό βερνίκι.",
       duration: "30 λεπτά",
+      durationMinutes: 30,
       price: "10.00€",
       popular: false,
     },
@@ -174,6 +225,7 @@ export const salonConfig = {
       description:
         "Ολοκληρωμένη περιποίηση επωνυχίων, σχηματισμός νυχιών, ενυδάτωση και απλό βερνίκι.",
       duration: "45 λεπτά",
+      durationMinutes: 45,
       price: "15.00€",
       popular: false,
     },
@@ -183,6 +235,7 @@ export const salonConfig = {
       name: "Ημιμόνιμο Express",
       description: "Γρήγορη εφαρμογή ημιμόνιμου βερνικιού με άμεσο στέγνωμα.",
       duration: "30 λεπτά",
+      durationMinutes: 30,
       price: "15.00€",
       popular: false,
     },
@@ -193,6 +246,7 @@ export const salonConfig = {
       description:
         "Πλήρης καθαρισμός επωνυχίων και άψογη εφαρμογή ημιμόνιμου χρώματος μακράς διάρκειας.",
       duration: "50 λεπτά",
+      durationMinutes: 60,
       price: "23.00€",
       popular: true,
     },
@@ -203,6 +257,7 @@ export const salonConfig = {
       description:
         "Ειδική τεχνική ενίσχυσης dipping για μέγιστη σκληρότητα, αντοχή και ανθεκτικότητα.",
       duration: "60 λεπτά",
+      durationMinutes: 60,
       price: "28.00€",
       popular: true,
     },
@@ -213,6 +268,7 @@ export const salonConfig = {
       description:
         "Πλήρης επιμήκυνση και αρχιτεκτονική φόρμα με επαγγελματικό Gel για εντυπωσιακά νύχια.",
       duration: "110-120 λεπτά",
+      durationMinutes: 120,
       price: "50.00€",
       popular: true,
     },
@@ -223,6 +279,7 @@ export const salonConfig = {
       description:
         "Ενίσχυση του φυσικού νυχιού με gel για προστασία από σπασίματα.",
       duration: "60 λεπτά",
+      durationMinutes: 60,
       price: "40.00€",
       popular: false,
     },
@@ -232,6 +289,7 @@ export const salonConfig = {
       name: "Συντήρηση Τεχνητών",
       description: "Ανανέωση σχήματος, γέμισμα ρίζας και νέο χρώμα.",
       duration: "60 λεπτά",
+      durationMinutes: 60,
       price: "35.00€",
       popular: true,
     },
@@ -241,6 +299,7 @@ export const salonConfig = {
       name: "Θεραπεία Χεριών Παραφίνη",
       description: "Εντατική ενυδάτωση και βαθιά θρέψη για ξηρά και ταλαιπωρημένα χέρια.",
       duration: "20 λεπτά",
+      durationMinutes: 20,
       price: "8.00€",
       popular: false,
     },
@@ -250,6 +309,7 @@ export const salonConfig = {
       name: "Αφαίρεση Ημιμόνιμου",
       description: "Απαλή και ασφαλής αφαίρεση χωρίς φθορά της φυσικής πλάκας.",
       duration: "15 λεπτά",
+      durationMinutes: 20,
       price: "5.00€",
       popular: false,
     },
@@ -259,6 +319,7 @@ export const salonConfig = {
       name: "Αφαίρεση Τεχνητών + Φινίρισμα",
       description: "Πλήρης αφαίρεση τεχνητών και φινίρισμα φυσικού νυχιού.",
       duration: "30 λεπτά",
+      durationMinutes: 30,
       price: "15.00€",
       popular: false,
     },
@@ -268,6 +329,7 @@ export const salonConfig = {
       name: "Nail Art (ανά νύχι)",
       description: "Custom σχέδια, γραμμικά, γαλλικά twists, chrome & glitter.",
       duration: "10 λεπτά",
+      durationMinutes: 15,
       price: "από 1.50€",
       popular: false,
     },
@@ -279,6 +341,7 @@ export const salonConfig = {
       name: "Pedicure Express",
       description: "Γρήγορη φροντίδα νυχιών ποδιών και ανανέωση χρώματος.",
       duration: "20 λεπτά",
+      durationMinutes: 20,
       price: "18.00€",
       popular: false,
     },
@@ -289,6 +352,7 @@ export const salonConfig = {
       description:
         "Ολοκληρωμένη περιποίηση πέλματος, αφαίρεση σκληρύνσεων, καθαρισμός επωνυχίων και απλό βερνίκι.",
       duration: "45 λεπτά",
+      durationMinutes: 45,
       price: "23.00€",
       popular: false,
     },
@@ -298,6 +362,7 @@ export const salonConfig = {
       name: "Pedicure Ημιμόνιμο Express",
       description: "Περιποίηση νυχιών και ημιμόνιμη βαφή ποδιών express.",
       duration: "35 λεπτά",
+      durationMinutes: 35,
       price: "20.00€",
       popular: false,
     },
@@ -308,6 +373,7 @@ export const salonConfig = {
       description:
         "Πλήρης περιποίηση πέλματος και ημιμόνιμο χρώμα μακράς διάρκειας με άμεσο στέγνωμα.",
       duration: "60 λεπτά",
+      durationMinutes: 60,
       price: "28.00€",
       popular: true,
     },
@@ -318,6 +384,7 @@ export const salonConfig = {
       description:
         "Εξειδικευμένη αντιμετώπιση υπερκερατώσεων, κάλων και σκληρύνσεων για απόλυτη ανακούφιση.",
       duration: "60 λεπτά",
+      durationMinutes: 60,
       price: "25.00€",
       popular: true,
     },
@@ -327,6 +394,7 @@ export const salonConfig = {
       name: "Θεραπεία Ποδιών Παραφίνη",
       description: "Βαθιά ενυδάτωση και απαλότητα για σκασμένες φτέρνες και ξηρά πέλματα.",
       duration: "20 λεπτά",
+      durationMinutes: 20,
       price: "8.00€",
       popular: false,
     },
@@ -338,6 +406,7 @@ export const salonConfig = {
       name: "Lash Lift Βλεφαρίδων",
       description: "Φυσική καμπυλότητα, ανόρθωση και όγκος στις δικές σας βλεφαρίδες.",
       duration: "45 λεπτά",
+      durationMinutes: 45,
       price: "40.00€",
       popular: true,
     },
@@ -347,6 +416,7 @@ export const salonConfig = {
       name: "Brow Lamination",
       description: "Σταθεροποίηση και πειθάρχηση των τριχών των φρυδιών για πυκνό, ανορθωμένο αποτέλεσμα.",
       duration: "45 λεπτά",
+      durationMinutes: 45,
       price: "40.00€",
       popular: true,
     },
@@ -356,6 +426,7 @@ export const salonConfig = {
       name: "Σχηματισμός Φρυδιών",
       description: "Καθαρισμός και γεωμετρικός σχηματισμός ανάλογα με τα χαρακτηριστικά σας.",
       duration: "10 λεπτά",
+      durationMinutes: 15,
       price: "10.00€",
       popular: false,
     },
@@ -365,6 +436,7 @@ export const salonConfig = {
       name: "Σχηματισμός Φρυδιών με Βαφή",
       description: "Σχηματισμός και ημιμόνιμη βαφή φρυδιών για έντονο, καλοσχηματισμένο βλέμμα.",
       duration: "15 λεπτά",
+      durationMinutes: 20,
       price: "15.00€",
       popular: true,
     },
@@ -376,6 +448,7 @@ export const salonConfig = {
       name: "Αποτρίχωση με Κερί Πόδια (Ολόκληρα)",
       description: "Αποτελεσματική αποτρίχωση με υποαλλεργικό κερί για βελούδινο δέρμα.",
       duration: "45 λεπτά",
+      durationMinutes: 45,
       price: "25.00€",
       popular: false,
     },
@@ -385,6 +458,7 @@ export const salonConfig = {
       name: "Αποτρίχωση με Κερί Πόδια (Μισά)",
       description: "Αποτρίχωση γάμπες ή μηροί.",
       duration: "30 λεπτά",
+      durationMinutes: 30,
       price: "15.00€",
       popular: false,
     },
@@ -394,6 +468,7 @@ export const salonConfig = {
       name: "Αποτρίχωση με Κερί Χέρια",
       description: "Απαλότητα και καθαρό δέρμα χωρίς ερεθισμούς.",
       duration: "30 λεπτά",
+      durationMinutes: 30,
       price: "12.00€",
       popular: false,
     },
@@ -403,6 +478,7 @@ export const salonConfig = {
       name: "Αποτρίχωση με Κερί Μασχάλες",
       description: "Γρήγορη και ανώδυνη αποτρίχωση μασχαλών.",
       duration: "15 λεπτά",
+      durationMinutes: 15,
       price: "10.00€",
       popular: false,
     },
@@ -412,6 +488,7 @@ export const salonConfig = {
       name: "Αποτρίχωση με Κλωστή Πρόσωπο",
       description: "Παραδοσιακή τεχνική με κλωστή για απόλυτη ακρίβεια χωρίς ερεθισμούς.",
       duration: "30 λεπτά",
+      durationMinutes: 30,
       price: "15.00€",
       popular: false,
     },
@@ -421,6 +498,7 @@ export const salonConfig = {
       name: "Αποτρίχωση με Κλωστή Άνω/Κάτω Χείλος",
       description: "Γρήγορη αφαίρεση χνουδιού με κλωστή.",
       duration: "10 λεπτά",
+      durationMinutes: 15,
       price: "5.00€",
       popular: false,
     },
@@ -430,6 +508,7 @@ export const salonConfig = {
       name: "Full Body Massage",
       description: "Χαλαρωτικό μασάζ σε όλο το σώμα για εκτόνωση της έντασης και ευεξία.",
       duration: "60 λεπτά",
+      durationMinutes: 60,
       price: "35.00€",
       popular: true,
     },

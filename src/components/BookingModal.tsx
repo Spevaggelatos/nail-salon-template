@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { salonConfig, ServiceItem } from "@/config/salon.config";
 import {
   X,
@@ -12,13 +12,35 @@ import {
   Check,
   Sparkles,
   Mail,
+  Loader2,
+  CalendarCheck,
+  AlertCircle,
+  Scissors,
 } from "lucide-react";
-import { InstagramIcon } from "./SocialIcons";
 
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialService?: ServiceItem | null;
+}
+
+interface SlotItem {
+  time: string;
+  availableStaff: {
+    id: string;
+    name: string;
+    role: string;
+  }[];
+}
+
+interface AvailabilityData {
+  date: string;
+  isOpen: boolean;
+  message?: string;
+  serviceId: string;
+  serviceName: string;
+  durationMinutes: number;
+  slots: SlotItem[];
 }
 
 export default function BookingModal({
@@ -29,324 +51,522 @@ export default function BookingModal({
   const [selectedServiceId, setSelectedServiceId] = useState<string>(
     initialService?.id || salonConfig.services[3].id
   );
-  const [date, setDate] = useState<string>("2026-11-12");
-  const [timeSlot, setTimeSlot] = useState<string>("11:00");
+  const [selectedStaffId, setSelectedStaffId] = useState<string>("any");
+  const [date, setDate] = useState<string>("");
+  const [selectedTime, setSelectedTime] = useState<string>("");
+
+  // Contact details
   const [name, setName] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
-  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
 
-  // Sync if initialService changes
+  // UI States
+  const [isLoadingSlots, setIsLoadingSlots] = useState<boolean>(false);
+  const [availability, setAvailability] = useState<AvailabilityData | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [bookingSuccess, setBookingSuccess] = useState<any | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+
+  // Set default date to tomorrow (or Tuesday if tomorrow is Sun/Mon)
+  useEffect(() => {
+    try {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      // If Sunday (0) or Monday (1), jump to Tuesday
+      if (d.getDay() === 0) d.setDate(d.getDate() + 2);
+      if (d.getDay() === 1) d.setDate(d.getDate() + 1);
+
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      setDate(`${yyyy}-${mm}-${dd}`);
+    } catch {
+      setDate("2026-11-12");
+    }
+  }, []);
+
+  // Update initialService when prop changes
   useEffect(() => {
     if (initialService) {
       setSelectedServiceId(initialService.id);
     }
   }, [initialService]);
 
-  useEffect(() => {
-    try {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const yyyy = tomorrow.getFullYear();
-      const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
-      const dd = String(tomorrow.getDate()).padStart(2, "0");
-      setDate(`${yyyy}-${mm}-${dd}`);
-    } catch {
-      // Fallback
-    }
-  }, []);
-
-  if (!isOpen) return null;
-
   const currentService =
     salonConfig.services.find((s) => s.id === selectedServiceId) ||
     salonConfig.services[0];
 
-  const timeSlots = [
-    "10:00",
-    "11:00",
-    "12:00",
-    "13:30",
-    "15:00",
-    "16:30",
-    "18:00",
-    "19:00",
-  ];
+  // Eligible staff members for current service category
+  const eligibleStaff = salonConfig.staff.filter((staff) =>
+    staff.categoryIds.includes(currentService.categoryId)
+  );
 
-  // Format email request for Neta Nails
-  const handleEmailBooking = () => {
-    if (!name || !phone) {
-      alert("Παρακαλούμε συμπληρώστε το όνομα και το τηλέφωνό σας.");
-      return;
+  // If selected staff is not eligible for new service, reset to "any"
+  useEffect(() => {
+    if (
+      selectedStaffId !== "any" &&
+      !eligibleStaff.some((s) => s.id === selectedStaffId)
+    ) {
+      setSelectedStaffId("any");
     }
+  }, [selectedServiceId, eligibleStaff, selectedStaffId]);
 
-    const subject = encodeURIComponent(
-      `Αίτημα Ραντεβού: ${currentService.name} - ${name}`
-    );
-    const body = encodeURIComponent(
-      `Γεια σας Neta Nails,\n\nΘα ήθελα να κλείσω ραντεβού με τα εξής στοιχεία:\n\n` +
-        `• Όνομα: ${name}\n` +
-        `• Τηλέφωνο: ${phone}\n` +
-        `• Υπηρεσία: ${currentService.name} (${currentService.price})\n` +
-        `• Επιθυμητή Ημερομηνία: ${date}\n` +
-        `• Επιθυμητή Ώρα: ${timeSlot}\n` +
-        `• Σημειώσεις: ${notes || "Καμία"}\n\n` +
-        `Ευχαριστώ πολύ!`
-    );
+  // Fetch available slots from backend whenever date, service, or staff changes
+  useEffect(() => {
+    if (!date || !selectedServiceId || !isOpen) return;
 
-    window.location.href = `mailto:${salonConfig.contact.email}?subject=${subject}&body=${body}`;
-    setIsSubmitted(true);
-  };
+    let isMounted = true;
+    setIsLoadingSlots(true);
+    setErrorMessage("");
+    setSelectedTime("");
 
-  const handleDirectSubmit = (e: React.FormEvent) => {
+    fetch(
+      `/api/booking/slots?date=${date}&serviceId=${selectedServiceId}&staffId=${selectedStaffId}`
+    )
+      .then((res) => res.json())
+      .then((data: AvailabilityData) => {
+        if (!isMounted) return;
+        setAvailability(data);
+        setIsLoadingSlots(false);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error("Failed to fetch slots:", err);
+        setIsLoadingSlots(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [date, selectedServiceId, selectedStaffId, isOpen]);
+
+  if (!isOpen) return null;
+
+  // Handle final appointment submission
+  const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone) {
-      alert("Παρακαλούμε συμπληρώστε το όνομα και το τηλέφωνό σας.");
+    setErrorMessage("");
+
+    if (!selectedTime) {
+      setErrorMessage("Παρακαλούμε επιλέξτε μια διαθέσιμη ώρα.");
       return;
     }
-    setIsSubmitted(true);
+    if (!name.trim() || !phone.trim()) {
+      setErrorMessage("Παρακαλούμε συμπληρώστε το ονοματεπώνυμο και το κινητό σας.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch("/api/booking/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceId: selectedServiceId,
+          staffId: selectedStaffId,
+          date,
+          time: selectedTime,
+          clientName: name,
+          clientPhone: phone,
+          clientEmail: email,
+          notes,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setErrorMessage(data.message || "Σφάλμα κατά την κράτηση. Παρακαλούμε δοκιμάστε ξανά.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      setBookingSuccess(data);
+      setIsSubmitting(false);
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("Παρουσιάστηκε πρόβλημα επικοινωνίας με το σύστημα κρατήσεων.");
+      setIsSubmitting(false);
+    }
   };
 
-  const handleReset = () => {
-    setIsSubmitted(false);
+  const handleResetAndClose = () => {
+    setBookingSuccess(null);
+    setSelectedTime("");
+    setErrorMessage("");
     onClose();
+  };
+
+  // Google Calendar "Add to Calendar" link for user
+  const generateGoogleCalendarUrl = () => {
+    if (!bookingSuccess?.details) return "#";
+    const d = bookingSuccess.details;
+    const startIso = `${d.date.replace(/-/g, "")}T${d.time.replace(":", "")}00`;
+    const startObj = new Date(`${d.date}T${d.time}:00`);
+    const endObj = new Date(startObj.getTime() + (d.durationMinutes || 60) * 60000);
+    const endIso = `${endObj.toISOString().slice(0, 10).replace(/-/g, "")}T${endObj
+      .toTimeString()
+      .slice(0, 5)
+      .replace(":", "")}00`;
+
+    const title = encodeURIComponent(`${salonConfig.business.name}: ${d.serviceName}`);
+    const details = encodeURIComponent(
+      `Ραντεβού στο ${salonConfig.business.name}\nΥπηρεσία: ${d.serviceName}\nΤεχνίτρια: ${d.staffName}\nΔιεύθυνση: ${salonConfig.contact.address.street}, ${salonConfig.contact.address.city}\nΤηλέφωνο: ${salonConfig.contact.phone}`
+    );
+    const location = encodeURIComponent(
+      `${salonConfig.contact.address.street}, ${salonConfig.contact.address.city}`
+    );
+
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${details}&location=${location}`;
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       {/* Modal Card */}
-      <div className="relative w-full max-w-xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[#EFDDD8] overflow-hidden max-h-[92vh] flex flex-col">
+      <div className="relative w-full max-w-xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[#EFDDD8] overflow-hidden max-h-[94vh] flex flex-col">
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-[#603C37] via-[#8C554C] to-[#A66D64] text-white p-5 sm:p-6 relative">
           <button
-            onClick={onClose}
-            className="absolute top-5 right-5 p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer"
-            aria-label="Close modal"
+            onClick={handleResetAndClose}
+            className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/15 hover:bg-black/25 rounded-full p-2 transition-colors cursor-pointer"
+            aria-label="Κλείσιμο"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-2 text-amber-200 text-xs font-semibold uppercase tracking-wider mb-1">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Κράτηση Ραντεβού • Χολαργός</span>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#C9A44C]/30 text-[#F5E6BE] border border-[#C9A44C]/40">
+              <Sparkles className="w-3 h-3 text-[#C9A44C]" />
+              Smart Google Calendar Booking
+            </span>
           </div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white p-0.5 overflow-hidden flex items-center justify-center">
-              <img
-                src={salonConfig.business.logoUrl}
-                alt="Logo"
-                className="w-full h-full object-cover rounded-lg"
-              />
-            </div>
-            <h3 className="font-serif-luxury text-2xl sm:text-3xl font-bold">
-              {salonConfig.business.name}
-            </h3>
-          </div>
-          <p className="text-xs text-[#F7EDEA] mt-1.5">
-            Λ. Περικλέους 56, Χολαργός • Τηλ: {salonConfig.contact.phone}
+
+          <h3 className="font-serif text-2xl sm:text-3xl font-light tracking-wide text-white">
+            Online Κράτηση Ραντεβού
+          </h3>
+          <p className="text-[#F7EDEA]/85 text-xs sm:text-sm mt-1">
+            Επιλέξτε υπηρεσία, τεχνίτρια & ώρα σε πραγματικό χρόνο χωρίς αναμονή
           </p>
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-5">
-          {isSubmitted ? (
-            /* Success confirmation screen */
-            <div className="text-center py-6 space-y-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                <Check className="w-8 h-8" />
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-6">
+          {bookingSuccess ? (
+            /* SUCCESS CONFIRMATION VIEW */
+            <div className="text-center py-6 space-y-5 animate-in zoom-in-95 duration-200">
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                <Check className="w-9 h-9 stroke-[2.5]" />
               </div>
-              <h4 className="font-serif-luxury text-2xl font-bold text-[#1C1514]">
-                Το αίτημά σας καταχωρήθηκε!
-              </h4>
-              <p className="text-sm text-[#6B5C59] max-w-md mx-auto">
-                Ευχαριστούμε,{" "}
-                <span className="font-semibold text-[#1C1514]">{name}</span>!
-                Λάβαμε το αίτημά σας για{" "}
-                <span className="font-semibold text-[#A66D64]">
-                  {currentService.name}
-                </span>{" "}
-                στις <span className="font-semibold text-[#1C1514]">{date}</span>{" "}
-                και ώρα{" "}
-                <span className="font-semibold text-[#1C1514]">{timeSlot}</span>.
-              </p>
-              <div className="bg-[#FBF6F5] p-4 rounded-2xl text-xs text-[#603C37] text-left max-w-md mx-auto border border-[#EFDDD8] space-y-1.5">
-                <p className="font-semibold">📞 Επόμενο Βήμα:</p>
-                <p>
-                  Η ομάδα του <b>Neta Nails</b> θα επικοινωνήσει μαζί σας στο{" "}
-                  <b>{phone}</b> για την επιβεβαίωση της ώρας σας.
-                  Για άμεση εξυπηρέτηση καλέστε στο{" "}
-                  <b>{salonConfig.contact.phone}</b>.
+
+              <div>
+                <span className="text-xs uppercase tracking-wider text-emerald-700 font-semibold bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                  Κωδικός: #{bookingSuccess.bookingId}
+                </span>
+                <h4 className="font-serif text-2xl font-light text-[#2C2422] mt-2">
+                  Το ραντεβού σας κατοχυρώθηκε!
+                </h4>
+                <p className="text-sm text-[#735A56] mt-1 max-w-md mx-auto">
+                  Έχει καταχωρηθεί αυτόματα στο ημερολόγιο του καταστήματος. Σας περιμένουμε!
                 </p>
               </div>
 
-              <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
+              {/* Receipt Summary Card */}
+              <div className="bg-[#FAF6F4] border border-[#EFDDD8] rounded-2xl p-4 text-left space-y-2 text-sm text-[#2C2422]">
+                <div className="flex justify-between items-center pb-2 border-b border-[#EFDDD8]">
+                  <span className="text-xs uppercase tracking-wider text-[#735A56]">Υπηρεσία:</span>
+                  <span className="font-medium text-[#8C554C]">
+                    {bookingSuccess.details?.serviceName}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pb-2 border-b border-[#EFDDD8]">
+                  <span className="text-xs uppercase tracking-wider text-[#735A56]">Τεχνίτρια:</span>
+                  <span className="font-medium">{bookingSuccess.details?.staffName}</span>
+                </div>
+                <div className="flex justify-between items-center pb-2 border-b border-[#EFDDD8]">
+                  <span className="text-xs uppercase tracking-wider text-[#735A56]">Ημερομηνία & Ώρα:</span>
+                  <span className="font-semibold text-emerald-700">
+                    {bookingSuccess.details?.date} στις {bookingSuccess.details?.time} (
+                    {bookingSuccess.details?.durationMinutes} λεπτά)
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pb-2 border-b border-[#EFDDD8]">
+                  <span className="text-xs uppercase tracking-wider text-[#735A56]">Εκτιμώμενη Αξία:</span>
+                  <span className="font-serif text-base font-bold text-[#8C554C]">
+                    {bookingSuccess.details?.price}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-1 text-xs text-[#735A56]">
+                  <span>Στοιχεία: {bookingSuccess.details?.clientName}</span>
+                  <span>Τηλ: {bookingSuccess.details?.clientPhone}</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <a
-                  href={`tel:${salonConfig.contact.phone.replace(/\s+/g, "")}`}
-                  className="px-6 py-2.5 bg-[#F7EDEA] text-[#603C37] text-xs font-semibold rounded-full hover:bg-[#EFDDD8] transition-colors flex items-center justify-center gap-1.5"
+                  href={generateGoogleCalendarUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#A66D64] hover:bg-[#8C554C] text-white rounded-xl font-medium text-sm transition-colors shadow-md"
                 >
-                  <Phone className="w-3.5 h-3.5 text-[#A66D64]" />
-                  <span>Κλήση: {salonConfig.contact.phone}</span>
+                  <CalendarCheck className="w-4 h-4" />
+                  Προσθήκη στο Google Calendar μου
                 </a>
                 <button
-                  onClick={handleReset}
-                  className="px-6 py-2.5 bg-[#A66D64] text-white text-xs font-semibold rounded-full hover:bg-[#8C554C] transition-colors cursor-pointer"
+                  type="button"
+                  onClick={handleResetAndClose}
+                  className="px-5 py-3 border border-[#EFDDD8] text-[#735A56] hover:bg-[#FAF6F4] rounded-xl text-sm font-medium transition-colors cursor-pointer"
                 >
-                  Επιστροφή στη Σελίδα
+                  Κλείσιμο
                 </button>
               </div>
             </div>
           ) : (
-            /* Booking Form */
-            <form onSubmit={handleDirectSubmit} className="space-y-4">
-              {/* Service Selection */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#A66D64] mb-1.5">
-                  1. Επιλογή Υπηρεσίας *
-                </label>
-                <select
-                  value={selectedServiceId}
-                  onChange={(e) => setSelectedServiceId(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-[#F3E9E6] focus:border-[#A66D64] focus:ring-1 focus:ring-[#A66D64] text-base sm:text-sm text-[#1C1514] bg-[#FDFBFB]"
-                >
-                  {salonConfig.services.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.duration} - {s.price})
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-[#8C554C] mt-1 italic">
-                  {currentService.description}
-                </p>
-              </div>
-
-              {/* Date & Time Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A66D64] mb-1.5 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>2. Ημερομηνία *</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    required
-                    className="w-full px-4 py-2 rounded-xl border border-[#F3E9E6] focus:border-[#A66D64] focus:ring-1 focus:ring-[#A66D64] text-base sm:text-sm text-[#1C1514] bg-[#FDFBFB]"
-                  />
+            /* BOOKING FORM VIEW */
+            <form onSubmit={handleSubmitBooking} className="space-y-5">
+              {/* Error Alert */}
+              {errorMessage && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs sm:text-sm text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMessage}</span>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A66D64] mb-1.5 flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>3. Επιθυμητή Ώρα *</span>
-                  </label>
+              {/* 1. Επιλογή Υπηρεσίας */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#735A56] mb-1.5">
+                  1. Επιλέξτε Υπηρεσία
+                </label>
+                <div className="relative">
                   <select
-                    value={timeSlot}
-                    onChange={(e) => setTimeSlot(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-[#F3E9E6] focus:border-[#A66D64] focus:ring-1 focus:ring-[#A66D64] text-base sm:text-sm text-[#1C1514] bg-[#FDFBFB]"
+                    value={selectedServiceId}
+                    onChange={(e) => setSelectedServiceId(e.target.value)}
+                    className="w-full bg-[#FAF6F4] border border-[#EFDDD8] rounded-xl px-4 py-2.5 text-sm text-[#2C2422] focus:outline-none focus:border-[#A66D64] focus:ring-1 focus:ring-[#A66D64]"
                   >
-                    {timeSlots.map((slot) => (
-                      <option key={slot} value={slot}>
-                        {slot}
-                      </option>
+                    {salonConfig.categories.map((cat) => (
+                      <optgroup key={cat.id} label={cat.name}>
+                        {salonConfig.services
+                          .filter((s) => s.categoryId === cat.id)
+                          .map((service) => (
+                            <option key={service.id} value={service.id}>
+                              {service.name} • {service.duration} — {service.price}
+                            </option>
+                          ))}
+                      </optgroup>
                     ))}
                   </select>
                 </div>
-              </div>
 
-              {/* Personal Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A66D64] mb-1.5 flex items-center gap-1">
-                    <User className="w-3.5 h-3.5" />
-                    <span>Ονοματεπώνυμο *</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="π.χ. Μαρία Παπαδοπούλου"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-[#F3E9E6] focus:border-[#A66D64] focus:ring-1 focus:ring-[#A66D64] text-base sm:text-sm text-[#1C1514] bg-[#FDFBFB]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#A66D64] mb-1.5 flex items-center gap-1">
-                    <Phone className="w-3.5 h-3.5" />
-                    <span>Τηλέφωνο Επικοινωνίας *</span>
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="π.χ. 6981234567"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-[#F3E9E6] focus:border-[#A66D64] focus:ring-1 focus:ring-[#A66D64] text-base sm:text-sm text-[#1C1514] bg-[#FDFBFB]"
-                  />
+                {/* Service Details Badge */}
+                <div className="mt-2 flex items-center justify-between bg-[#F7EDEA]/60 border border-[#EFDDD8] rounded-xl p-2.5 text-xs text-[#735A56]">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-[#8C554C]" />
+                    <span>
+                      Διάρκεια:{" "}
+                      <strong className="text-[#2C2422]">{currentService.duration}</strong>
+                    </span>
+                  </div>
+                  <div className="font-semibold text-sm text-[#8C554C]">
+                    {currentService.price}
+                  </div>
                 </div>
               </div>
 
-              {/* Notes / Special Requests */}
+              {/* 2. Επιλογή Τεχνίτριας */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#A66D64] mb-1.5 flex items-center gap-1">
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>Σημειώσεις (Προαιρετικό)</span>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#735A56] mb-1.5">
+                  2. Επιλέξτε Τεχνίτρια
                 </label>
-                <textarea
-                  rows={2}
-                  placeholder="π.χ. Επιθυμώ και αφαίρεση ημιμόνιμου ή nail art σχέδιο"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-[#F3E9E6] focus:border-[#A66D64] focus:ring-1 focus:ring-[#A66D64] text-base sm:text-sm text-[#1C1514] bg-[#FDFBFB] resize-none"
-                />
-              </div>
-
-              {/* Submission Options */}
-              <div className="pt-2 space-y-2.5">
-                {/* 1. Primary Web Booking Request */}
-                <button
-                  type="submit"
-                  className="w-full py-3.5 px-4 bg-gradient-to-r from-[#A66D64] to-[#BF8379] hover:from-[#8C554C] hover:to-[#A66D64] text-white font-semibold text-xs sm:text-sm uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Calendar className="w-4 h-4" />
-                  <span>Αποστολή Αιτήματος Κράτησης</span>
-                </button>
-
-                {/* 2. Secondary Quick Channels: Call, Email, Instagram */}
-                <div className="grid grid-cols-3 gap-2 pt-1">
-                  <a
-                    href={`tel:${salonConfig.contact.phone.replace(/\s+/g, "")}`}
-                    className="py-2.5 px-3 bg-[#F7EDEA] hover:bg-[#EFDDD8] text-[#603C37] font-semibold text-[11px] rounded-xl transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <Phone className="w-3.5 h-3.5 text-[#A66D64]" />
-                    <span>Κλήση</span>
-                  </a>
-
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     type="button"
-                    onClick={handleEmailBooking}
-                    className="py-2.5 px-3 bg-[#FBF8F0] hover:bg-[#EDDBA6]/50 text-[#8A6823] font-semibold text-[11px] rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    onClick={() => setSelectedStaffId("any")}
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      selectedStaffId === "any"
+                        ? "bg-[#8C554C] text-white border-[#8C554C] shadow-sm"
+                        : "bg-[#FAF6F4] text-[#2C2422] border-[#EFDDD8] hover:border-[#BF8379]"
+                    }`}
                   >
-                    <Mail className="w-3.5 h-3.5" />
-                    <span>Email</span>
+                    <div className="text-xs font-semibold">✨ Πρώτη Διαθέσιμη</div>
+                    <div
+                      className={`text-[10px] truncate ${
+                        selectedStaffId === "any" ? "text-white/80" : "text-[#735A56]"
+                      }`}
+                    >
+                      Ταχύτερο ραντεβού
+                    </div>
                   </button>
 
-                  <a
-                    href={salonConfig.contact.socials.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-[#1C1514] font-semibold text-[11px] rounded-xl transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <InstagramIcon className="w-3.5 h-3.5 text-[#A66D64]" />
-                    <span>Instagram</span>
-                  </a>
+                  {eligibleStaff.map((staff) => (
+                    <button
+                      key={staff.id}
+                      type="button"
+                      onClick={() => setSelectedStaffId(staff.id)}
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                        selectedStaffId === staff.id
+                          ? "bg-[#8C554C] text-white border-[#8C554C] shadow-sm"
+                          : "bg-[#FAF6F4] text-[#2C2422] border-[#EFDDD8] hover:border-[#BF8379]"
+                      }`}
+                    >
+                      <div className="text-xs font-semibold">{staff.name}</div>
+                      <div
+                        className={`text-[10px] truncate ${
+                          selectedStaffId === staff.id ? "text-white/80" : "text-[#735A56]"
+                        }`}
+                      >
+                        {staff.role.split(" ")[0]}
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <p className="text-[10px] text-center text-[#6B5C59]">
-                📍 Λ. Περικλέους 56, Χολαργός (Δευτέρα & Κυριακή Κλειστά)
-              </p>
+              {/* 3. Ημερομηνία & Dynamic Slots */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-[#735A56]">
+                    3. Ημερομηνία & Ώρα
+                  </label>
+                  <span className="text-[11px] text-[#8C554C] font-medium">
+                    Τρίτη - Παρασκευή: 10-20 | Σάβ: 9-17
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-1">
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full bg-[#FAF6F4] border border-[#EFDDD8] rounded-xl px-3 py-2.5 text-xs text-[#2C2422] focus:outline-none focus:border-[#A66D64]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    {isLoadingSlots ? (
+                      <div className="h-20 bg-[#FAF6F4] border border-[#EFDDD8] rounded-xl flex items-center justify-center gap-2 text-xs text-[#735A56]">
+                        <Loader2 className="w-4 h-4 animate-spin text-[#8C554C]" />
+                        <span>Έλεγχος διαθεσιμότητας Google Calendar...</span>
+                      </div>
+                    ) : availability && !availability.isOpen ? (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 text-center">
+                        🔒 {availability.message || "Κλειστά αυτή την ημέρα."}
+                      </div>
+                    ) : availability && availability.slots.length === 0 ? (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 text-center">
+                        Δεν υπάρχει κενό {currentService.duration} για αυτή την ημέρα. Παρακαλούμε επιλέξτε άλλη ημερομηνία.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-4 sm:grid-cols-4 gap-1.5 max-h-36 overflow-y-auto p-1">
+                        {availability?.slots.map((slot) => {
+                          const isSelected = selectedTime === slot.time;
+                          return (
+                            <button
+                              key={slot.time}
+                              type="button"
+                              onClick={() => setSelectedTime(slot.time)}
+                              className={`py-2 px-1 rounded-lg text-xs font-medium text-center transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#8C554C] text-white shadow-sm ring-2 ring-[#8C554C]/40"
+                                  : "bg-[#FAF6F4] hover:bg-[#F7EDEA] text-[#2C2422] border border-[#EFDDD8]"
+                              }`}
+                            >
+                              {slot.time}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {selectedTime && (
+                  <div className="mt-2 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-1.5 flex items-center justify-between">
+                    <span>
+                      ✓ Επιλεγμένη ώρα: <strong>{selectedTime}</strong> ({currentService.duration})
+                    </span>
+                    <span className="text-[11px] text-emerald-600">Άμεση κατοχύρωση</span>
+                  </div>
+                )}
+              </div>
+
+              {/* 4. Στοιχεία Πελάτη */}
+              <div className="space-y-3 pt-1 border-t border-[#EFDDD8]">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#735A56]">
+                  4. Τα Στοιχεία Σας
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Ονοματεπώνυμο *"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full bg-[#FAF6F4] border border-[#EFDDD8] rounded-xl px-3 py-2 text-xs text-[#2C2422] focus:outline-none focus:border-[#A66D64]"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="tel"
+                      placeholder="Κινητό Τηλέφωνο *"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full bg-[#FAF6F4] border border-[#EFDDD8] rounded-xl px-3 py-2 text-xs text-[#2C2422] focus:outline-none focus:border-[#A66D64]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    type="email"
+                    placeholder="Email (για επιβεβαίωση)"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-[#FAF6F4] border border-[#EFDDD8] rounded-xl px-3 py-2 text-xs text-[#2C2422] focus:outline-none focus:border-[#A66D64]"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Σημειώσεις (π.χ. σχέδιο, αφαίρεση)"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full bg-[#FAF6F4] border border-[#EFDDD8] rounded-xl px-3 py-2 text-xs text-[#2C2422] focus:outline-none focus:border-[#A66D64]"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !selectedTime}
+                  className={`w-full py-3.5 px-4 rounded-xl font-medium text-sm text-white flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer ${
+                    isSubmitting || !selectedTime
+                      ? "bg-[#BF8379]/60 cursor-not-allowed"
+                      : "bg-[#8C554C] hover:bg-[#603C37] active:scale-[0.99]"
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Καταχώρηση στο Calendar...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Επιβεβαίωση Ραντεβού ({currentService.price})
+                    </>
+                  )}
+                </button>
+
+                <p className="text-[11px] text-center text-[#735A56] mt-2">
+                  🔒 Χωρίς προπληρωμή • Πληρωμή στο κατάστημα • Δωρεάν ακύρωση έως 2 ώρες πριν
+                </p>
+              </div>
             </form>
           )}
         </div>
