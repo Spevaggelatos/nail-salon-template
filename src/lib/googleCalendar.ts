@@ -52,6 +52,23 @@ interface BusyInterval {
   end: Date;
 }
 
+// In-Memory store to persist newly created bookings across requests
+interface BookedSlotRecord {
+  bookingId: string;
+  staffId: string;
+  date: string;
+  start: Date;
+  end: Date;
+  serviceName: string;
+  clientName: string;
+}
+
+const globalStore = globalThis as unknown as { __salonBookings?: BookedSlotRecord[] };
+if (!globalStore.__salonBookings) {
+  globalStore.__salonBookings = [];
+}
+const activeBookings = globalStore.__salonBookings;
+
 /**
  * Creates authenticated Google Calendar client if credentials exist in env.
  */
@@ -122,34 +139,42 @@ async function fetchStaffBusyIntervals(
   const calendar = getGoogleCalendarClient();
   const calendarId = staff.googleCalendarId || "primary";
 
+  let baselineBusy: BusyInterval[] = [];
+
   // If no Google credentials or placeholder, use realistic demo simulation
   if (!calendar || calendarId === "primary" || calendarId.startsWith("mock-")) {
-    return getSimulatedBusyIntervals(dateStr, staff.id);
+    baselineBusy = getSimulatedBusyIntervals(dateStr, staff.id);
+  } else {
+    try {
+      const timeMin = new Date(`${dateStr}T00:00:00.000Z`).toISOString();
+      const timeMax = new Date(`${dateStr}T23:59:59.999Z`).toISOString();
+
+      const response = await calendar.freebusy.query({
+        requestBody: {
+          timeMin,
+          timeMax,
+          timeZone: "Europe/Athens",
+          items: [{ id: calendarId }],
+        },
+      });
+
+      const busyList = response.data.calendars?.[calendarId]?.busy || [];
+      baselineBusy = busyList.map((item) => ({
+        start: new Date(item.start!),
+        end: new Date(item.end!),
+      }));
+    } catch (error) {
+      console.error(`[Google Calendar] Error fetching freebusy for ${staff.name}:`, error);
+      baselineBusy = getSimulatedBusyIntervals(dateStr, staff.id);
+    }
   }
 
-  try {
-    const timeMin = new Date(`${dateStr}T00:00:00.000Z`).toISOString();
-    const timeMax = new Date(`${dateStr}T23:59:59.999Z`).toISOString();
+  // Merge with any in-memory bookings created during the session
+  const runtimeBookings = activeBookings
+    .filter((b) => b.staffId === staff.id && b.date === dateStr)
+    .map((b) => ({ start: b.start, end: b.end }));
 
-    const response = await calendar.freebusy.query({
-      requestBody: {
-        timeMin,
-        timeMax,
-        timeZone: "Europe/Athens",
-        items: [{ id: calendarId }],
-      },
-    });
-
-    const busyList = response.data.calendars?.[calendarId]?.busy || [];
-    return busyList.map((item) => ({
-      start: new Date(item.start!),
-      end: new Date(item.end!),
-    }));
-  } catch (error) {
-    console.error(`[Google Calendar] Error fetching freebusy for ${staff.name}:`, error);
-    // Graceful fallback to simulation so the customer can still test
-    return getSimulatedBusyIntervals(dateStr, staff.id);
-  }
+  return [...baselineBusy, ...runtimeBookings];
 }
 
 /**
@@ -366,6 +391,17 @@ export async function createBookingAppointment(
       // Even if Google API failed, we don't block the customer confirmation
     }
   }
+
+  // Persist newly created booking to in-memory store so slot immediately disappears
+  activeBookings.push({
+    bookingId,
+    staffId: assignedStaff.id,
+    date: payload.date,
+    start: startDateTime,
+    end: endDateTime,
+    serviceName: service.name,
+    clientName: payload.clientName,
+  });
 
   return {
     success: true,

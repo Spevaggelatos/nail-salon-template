@@ -309,7 +309,7 @@ export const salonConfig = {
       name: "Αφαίρεση Ημιμόνιμου",
       description: "Απαλή και ασφαλής αφαίρεση χωρίς φθορά της φυσικής πλάκας.",
       duration: "15 λεπτά",
-      durationMinutes: 20,
+      durationMinutes: 15,
       price: "5.00€",
       popular: false,
     },

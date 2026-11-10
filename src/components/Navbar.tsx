@@ -59,7 +59,7 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
           </a>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden lg:flex items-center space-x-8">
+          <nav className="hidden lg:flex items-center space-x-6">
             {navLinks.map((link) => (
               <a
                 key={link.href}

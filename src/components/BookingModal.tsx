@@ -122,7 +122,8 @@ export default function BookingModal({
     setSelectedTime("");
 
     fetch(
-      `/api/booking/slots?date=${date}&serviceId=${selectedServiceId}&staffId=${selectedStaffId}`
+      `/api/booking/slots?date=${date}&serviceId=${selectedServiceId}&staffId=${selectedStaffId}&_t=${Date.now()}`,
+      { cache: "no-store" }
     )
       .then((res) => res.json())
       .then((data: AvailabilityData) => {
