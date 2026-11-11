@@ -134,7 +134,7 @@ export const salonConfig = {
 
   // --- ΧΡΩΜΑΤΙΚΟ ΣΤΥΛ & THEME ---
   theme: {
-    accentColor: "terracotta",
+    accentColor: "burgundy-rose",
     badgeText: "✨ 4.9 ★ Top Rated Nail Studio στον Χολαργό",
   },
 
@@ -518,39 +518,39 @@ export const salonConfig = {
   gallery: [
     {
       id: "g1",
-      title: "Signature Nail Art & French Twist",
+      title: "CND Vinylux & Pastel Palette Manicure",
       category: "manicure",
-      imageUrl: "/images/netanails/work-1.jpg",
+      imageUrl: "/images/netanails/nails1.jpg",
     },
     {
       id: "g2",
-      title: "Glazed Powder & Almond Gel Extensions",
+      title: "Deep Burgundy & Dotwork Chic",
       category: "manicure",
-      imageUrl: "/images/netanails/work-2.jpg",
+      imageUrl: "/images/netanails/nails3.jpg",
     },
     {
       id: "g3",
-      title: "Bold Red Nails & Flawless Cuticles",
+      title: "Almond Pink Glaze & Holographic Flakes",
       category: "manicure",
-      imageUrl: "/images/netanails/work-3.jpg",
+      imageUrl: "/images/netanails/nails4.jpg",
     },
     {
       id: "g4",
-      title: "Neta Nails Lounge & Reception",
+      title: "Festive Red Glitter French & Nail Art",
       category: "manicure",
-      imageUrl: "/images/netanails/salon-1.jpg",
+      imageUrl: "/images/netanails/nails2.jpg",
     },
     {
       id: "g5",
-      title: "Spa Pedicure & Therapeutic Care",
-      category: "pedicure",
-      imageUrl: "https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?auto=format&fit=crop&w=800&q=80",
+      title: "Neta Nails Floral Lounge Emblem",
+      category: "manicure",
+      imageUrl: "/images/netanails/logo.jpg",
     },
     {
       id: "g6",
-      title: "Lash Lift & Brow Lamination Glow",
-      category: "brows-lashes",
-      imageUrl: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=800&q=80",
+      title: "Glazed Powder & Almond Gel Extensions",
+      category: "manicure",
+      imageUrl: "/images/netanails/work-2.jpg",
     },
   ] as GalleryItem[],
 

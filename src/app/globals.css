@@ -5,18 +5,25 @@
     --background: #fdfbfb;
     --foreground: #1c1514;
     
-    /* Neta Nails Warm Terracotta & Nude Palette */
-    --brand-50: #fbf6f5;
-    --brand-100: #f7edea;
-    --brand-200: #efddd8;
-    --brand-300: #e2c4bc;
-    --brand-400: #cfa297;
-    --brand-500: #bf8379;
-    --brand-600: #a66d64;
-    --brand-700: #8c554c;
-    --brand-800: #744740;
-    --brand-900: #603c37;
+    /* Neta Nails Floral Burgundy, Blush Rose & Botanical Palette */
+    --brand-50: #fdf7f9;
+    --brand-100: #faedf0;
+    --brand-200: #f4d8df;
+    --brand-300: #e8bac6;
+    --brand-400: #d38ca0;
+    --brand-500: #be6076;
+    --brand-600: #9c354e;
+    --brand-700: #84233c;
+    --brand-800: #6f1a30;
+    --brand-900: #541223;
     
+    /* Eucalyptus Botanical Accent (from Logo Leaves) */
+    --sage-50: #f4f7f5;
+    --sage-100: #eaf0ec;
+    --sage-300: #b5c7bc;
+    --sage-500: #6e8b79;
+    --sage-700: #4b6555;
+
     /* Warm Champagne / Gold Accent */
     --gold-100: #fbf8f0;
     --gold-300: #eddba6;
@@ -25,8 +32,8 @@
 
     /* Card & Surfaces */
     --card-bg: #ffffff;
-    --card-border: #f3e9e6;
-    --text-muted: #6b5c59;
+    --card-border: #f2e5e8;
+    --text-muted: #6c565e;
   }
 
   body {
@@ -48,14 +55,14 @@
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #fbf6f5;
+  background: #fdf7f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #efddd8;
+  background: #f4d8df;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #e2c4bc;
+  background: #e8bac6;
 }
 
 /* Glassmorphism utility */
