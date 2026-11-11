@@ -77,8 +77,8 @@ export const salonConfig = {
     googleMapsDirectionsUrl:
       "https://www.google.com/maps/search/?api=1&query=Neta+Nails+Λεωφόρος+Περικλέους+56+Χολαργός",
     socials: {
-      instagram: "https://www.instagram.com/netanails/",
-      instagramHandle: "@netanails",
+      instagram: "https://www.instagram.com/neta_nails_holargos/",
+      instagramHandle: "@neta_nails_holargos",
       facebook: "https://www.facebook.com/",
       treatwell: "https://widget.treatwell.gr/katasthma/neta-nails/",
     },
@@ -514,7 +514,7 @@ export const salonConfig = {
     },
   ] as ServiceItem[],
 
-  // --- GALLERY / LOOKBOOK (ΠΡΑΓΜΑΤΙΚΕΣ ΦΩΤΟΓΡΑΦΙΕΣ INSTAGRAM NETA NAILS) ---
+  // --- GALLERY / LOOKBOOK (ΠΡΑΓΜΑΤΙΚΕΣ ΦΩΤΟΓΡΑΦΙΕΣ NETA NAILS + SPA) ---
   gallery: [
     {
       id: "g1",
@@ -542,15 +542,21 @@ export const salonConfig = {
     },
     {
       id: "g5",
-      title: "Neta Nails Floral Lounge Emblem",
-      category: "manicure",
-      imageUrl: "/images/netanails/logo.jpg",
+      title: "Spa Pedicure & Θεραπευτική Περιποίηση",
+      category: "pedicure",
+      imageUrl: "https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?auto=format&fit=crop&w=800&q=80",
     },
     {
       id: "g6",
-      title: "Glazed Powder & Almond Gel Extensions",
-      category: "manicure",
-      imageUrl: "/images/netanails/work-2.jpg",
+      title: "Full Body Relaxing Massage & Ευεξία",
+      category: "waxing-massage",
+      imageUrl: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=800&q=80",
+    },
+    {
+      id: "g7",
+      title: "Lash Lift & Brow Lamination Glow",
+      category: "brows-lashes",
+      imageUrl: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=800&q=80",
     },
   ] as GalleryItem[],
 
@@ -600,7 +606,7 @@ export const salonConfig = {
     {
       question: "Πώς μπορώ να κλείσω ραντεβού;",
       answer:
-        "Μπορείτε να κλείσετε ραντεβού online μέσα από την ιστοσελίδα μας, τηλεφωνικά στο 210 6512635 ή στέλνοντάς μας μήνυμα στο Instagram (@netanails).",
+        "Μπορείτε να κλείσετε ραντεβού online μέσα από την ιστοσελίδα μας, τηλεφωνικά στο 210 6512635 ή στέλνοντάς μας μήνυμα στο Instagram (@neta_nails_holargos).",
     },
     {
       question: "Τι είναι το ενισχυμένο Dipping;",
