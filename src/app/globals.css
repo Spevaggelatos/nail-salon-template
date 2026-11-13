@@ -71,3 +71,31 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+
+/* Soft botanical marble texture */
+.marble-surface {
+  background-color: #fdfbfb;
+  background-image:
+    radial-gradient(at 15% 15%, rgba(244, 216, 223, 0.25) 0px, transparent 50%),
+    radial-gradient(at 85% 20%, rgba(234, 240, 236, 0.35) 0px, transparent 45%),
+    radial-gradient(at 50% 85%, rgba(250, 237, 240, 0.4) 0px, transparent 55%);
+}
+
+/* Luxury shimmer accent */
+@keyframes soft-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.btn-luxury-shimmer {
+  background-size: 200% 100%;
+  transition: background-position 0.6s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.btn-luxury-shimmer:hover {
+  background-position: 100% 0;
+}

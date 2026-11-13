@@ -13,6 +13,10 @@ export interface StaffMember {
   id: string;
   name: string;
   role: string;
+  initials?: string;
+  rating?: string;
+  reviewCount?: number;
+  highlights?: string[];
   avatar?: string;
   categoryIds: string[]; // which categories they handle
   googleCalendarId?: string; // e.g. "tech1@group.calendar.google.com" or "primary"
@@ -29,9 +33,11 @@ export interface Testimonial {
   id: string;
   name: string;
   service: string;
+  technician?: string;
   comment: string;
   rating: number;
   date: string;
+  verifiedSource?: string;
 }
 
 export interface FAQItem {
@@ -70,7 +76,7 @@ export const salonConfig = {
       street: "Λεωφόρος Περικλέους 56",
       city: "Χολαργός, Αθήνα",
       postalCode: "155 61",
-      area: "Χολαργός (Κεντρική Λεωφόρος)",
+      area: "Χολαργός (Holargos Center, 2ος όροφος)",
     },
     googleMapsEmbedUrl:
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3143.896752762263!2d23.79978!3d38.00345!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14a1985160803c0b%3A0x7d6f55562140bb93!2sLeof.%20Perikleous%2056%2C%20Cholargos%20155%2061!5e0!3m2!1sel!2sgr!4v1700000000000!5m2!1sel!2sgr",
@@ -87,8 +93,7 @@ export const salonConfig = {
   // --- ΩΡΑΡΙΟ ΛΕΙΤΟΥΡΓΙΑΣ ---
   openingHours: [
     { days: "Δευτέρα", hours: "Κλειστά" },
-    { days: "Τρίτη - Παρασκευή", hours: "10:00 - 20:00" },
-    { days: "Σάββατο", hours: "09:00 - 17:00" },
+    { days: "Τρίτη - Σάββατο", hours: "09:00 - 20:00" },
     { days: "Κυριακή", hours: "Κλειστά" },
   ],
 
@@ -99,38 +104,47 @@ export const salonConfig = {
     scheduleByDay: {
       0: null, // Κυριακή: Κλειστά
       1: null, // Δευτέρα: Κλειστά
-      2: { open: "10:00", close: "20:00" }, // Τρίτη
-      3: { open: "10:00", close: "20:00" }, // Τετάρτη
-      4: { open: "10:00", close: "20:00" }, // Πέμπτη
-      5: { open: "10:00", close: "20:00" }, // Παρασκευή
-      6: { open: "09:00", close: "17:00" }, // Σάββατο
+      2: { open: "09:00", close: "20:00" }, // Τρίτη
+      3: { open: "09:00", close: "20:00" }, // Τετάρτη
+      4: { open: "09:00", close: "20:00" }, // Πέμπτη
+      5: { open: "09:00", close: "20:00" }, // Παρασκευή
+      6: { open: "09:00", close: "20:00" }, // Σάββατο
     } as Record<number, { open: string; close: string } | null>,
   },
 
   // --- ΟΜΑΔΑ & ΤΕΧΝΙΤΡΙΕΣ (STAFF / CALENDARS) ---
   staff: [
     {
-      id: "anna",
-      name: "Άννα",
-      role: "Senior Nail Artist (Gel & Dipping)",
-      categoryIds: ["manicure", "pedicure"],
-      googleCalendarId: process.env.GOOGLE_CALENDAR_ID_ANNA || "primary",
+      id: "nektaria",
+      name: "Νεκταρία",
+      role: "Ιδρύτρια & Senior Nail Specialist",
+      initials: "ΝΚ",
+      rating: "5.0",
+      reviewCount: 121,
+      highlights: ["Επαγγελματισμός", "Προσοχή στη λεπτομέρεια"],
+      categoryIds: ["manicure", "pedicure", "brows-lashes", "waxing-massage"],
+      googleCalendarId: process.env.GOOGLE_CALENDAR_ID_NEKTARIA || "primary",
     },
     {
-      id: "maria",
-      name: "Μαρία",
-      role: "Nail & Pedicure Specialist",
-      categoryIds: ["manicure", "pedicure"],
-      googleCalendarId: process.env.GOOGLE_CALENDAR_ID_MARIA || "primary",
-    },
-    {
-      id: "eleni",
-      name: "Ελένη",
-      role: "Lashes, Brows & Body Specialist",
-      categoryIds: ["brows-lashes", "waxing-massage"],
-      googleCalendarId: process.env.GOOGLE_CALENDAR_ID_ELENI || "primary",
+      id: "elli",
+      name: "Έλλη",
+      role: "Nail, Pedicure & Beauty Specialist",
+      initials: "ΕΛ",
+      rating: "5.0",
+      reviewCount: 71,
+      highlights: ["Θεραπευτικό Πεντικιούρ", "Φιλική εξυπηρέτηση"],
+      categoryIds: ["manicure", "pedicure", "brows-lashes", "waxing-massage"],
+      googleCalendarId: process.env.GOOGLE_CALENDAR_ID_ELLI || "primary",
     },
   ] as StaffMember[],
+
+  // --- ΑΝΑΛΥΤΙΚΗ ΒΑΘΜΟΛΟΓΙΑ (TREATWELL VERIFIED) ---
+  ratingBreakdown: [
+    { label: "Nail Art", score: "5.0" },
+    { label: "Αποτρίχωση", score: "5.0" },
+    { label: "Πεντικιούρ", score: "4.94" },
+    { label: "Μανικιούρ", score: "4.91" },
+  ],
 
   // --- ΧΡΩΜΑΤΙΚΟ ΣΤΥΛ & THEME ---
   theme: {
@@ -560,34 +574,48 @@ export const salonConfig = {
     },
   ] as GalleryItem[],
 
-  // --- ΚΡΙΤΙΚΕΣ ΠΕΛΑΤΩΝ NETA NAILS ---
+  // --- ΚΡΙΤΙΚΕΣ ΠΕΛΑΤΩΝ NETA NAILS (ΕΠΑΛΗΘΕΥΜΕΝΕΣ TREATWELL) ---
   testimonials: [
     {
       id: "t1",
-      name: "Χριστίνα Β.",
-      service: "Ημιμόνιμο Dipping & Pedicure",
-      comment:
-        "Το αγαπημένο μου spot στον Χολαργό! Καταπληκτική δουλειά, τα νύχια κρατάνε 4 εβδομάδες χωρίς σπάσιμο. Οι κοπέλες είναι ευγενέστατες και ο χώρος πεντακάθαρος.",
+      name: "Μαρία",
+      service: "Πεντικιούρ",
+      technician: "Έλλη",
+      comment: "Το καλύτερο πεντικιούρ με διαφορά! Υπέροχα!",
       rating: 5,
-      date: "Κριτική Treatwell / Google",
+      date: "Οκτώβριος 2026",
+      verifiedSource: "Treatwell Verified",
     },
     {
       id: "t2",
-      name: "Ιωάννα Κ.",
-      service: "Τοποθέτηση Τεχνητών Νυχιών",
-      comment:
-        "Πρώτη φορά τεχνητά νύχια που φαίνονται τόσο φυσικά και κομψά. Έχουν τεράστια ποικιλία χρωμάτων και το αποτέλεσμα ήταν ακριβώς αυτό που ζήτησα!",
+      name: "Alba",
+      service: "Μανικιούρ",
+      technician: "Έλλη",
+      comment: "Όπως πάντα, πρόθυμες και βοηθητικές. Σας ευχαριστώ πάρα πολύ!",
       rating: 5,
-      date: "Κριτική Treatwell / Google",
+      date: "Οκτώβριος 2026",
+      verifiedSource: "Treatwell Verified",
     },
     {
       id: "t3",
-      name: "Ελένη Μ.",
-      service: "Lash Lift & Σχηματισμός Φρυδιών",
-      comment:
-        "Απίστευτο αποτέλεσμα στο Lash Lift! Το βλέμμα μου άλλαξε τελείως χωρίς να χρειάζομαι μάσκαρα. Το προτείνω ανεπιφύλακτα!",
+      name: "Μαρία Π.",
+      service: "Πεντικιούρ",
+      technician: "Έλλη",
+      comment: "Υπέροχα τα κορίτσια, φανταστική δουλειά!!",
       rating: 5,
-      date: "Κριτική Treatwell / Google",
+      date: "Σεπτέμβριος 2026",
+      verifiedSource: "Treatwell Verified",
+    },
+    {
+      id: "t4",
+      name: "Ηλιάνα",
+      service: "Μανικιούρ",
+      technician: "Έλλη",
+      comment:
+        "Ήταν ωραία η ατμόσφαιρα και φιλική, όπου με περιποιήθηκαν τα κορίτσια.",
+      rating: 4,
+      date: "Νοέμβριος 2026",
+      verifiedSource: "Treatwell Verified",
     },
   ] as Testimonial[],
 
@@ -596,12 +624,12 @@ export const salonConfig = {
     {
       question: "Πού βρίσκεται το Neta Nails στον Χολαργό;",
       answer:
-        "Βρισκόμαστε στη Λεωφόρο Περικλέους 56 στον Χολαργό (Τ.Κ. 155 61), σε κεντρικό και πολύ εύκολα προσβάσιμο σημείο με άνετη στάθμευση.",
+        "Βρισκόμαστε στη Λεωφόρο Περικλέους 56 στον Χολαργό (εντός του εμπορικού κέντρου Holargos Center, 2ος όροφος, Τ.Κ. 155 61), σε κεντρικό και εύκολα προσβάσιμο σημείο.",
     },
     {
       question: "Ποιο είναι το ωράριο λειτουργίας;",
       answer:
-        "Λειτουργούμε Τρίτη έως Παρασκευή 10:00 - 20:00 και Σάββατο 09:00 - 17:00. Δευτέρα και Κυριακή το κατάστημα είναι κλειστό.",
+        "Λειτουργούμε Τρίτη έως Σάββατο 09:00 - 20:00. Δευτέρα και Κυριακή το κατάστημα παραμένει κλειστό.",
     },
     {
       question: "Πώς μπορώ να κλείσω ραντεβού;",

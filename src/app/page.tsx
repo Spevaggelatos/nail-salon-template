@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MotionConfig } from "framer-motion";
 import { ServiceItem } from "@/config/salon.config";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
@@ -31,7 +32,8 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FDFBFB] text-[#1C1514]">
+    <MotionConfig reducedMotion="user">
+      <div className="min-h-screen flex flex-col bg-[#FDFBFB] text-[#1C1514]">
       {/* Top Announcement Bar */}
       <AnnouncementBar onOpenBooking={() => handleOpenBooking()} />
 
@@ -68,12 +70,13 @@ export default function HomePage() {
       {/* Fixed Sticky Mobile Bar (Call & Book) */}
       <MobileBookingBar onOpenBooking={() => handleOpenBooking()} />
 
-      {/* Interactive Booking Modal */}
-      <BookingModal
-        isOpen={isBookingOpen}
-        onClose={handleCloseBooking}
-        initialService={selectedService}
-      />
-    </div>
+        {/* Interactive Booking Modal */}
+        <BookingModal
+          isOpen={isBookingOpen}
+          onClose={handleCloseBooking}
+          initialService={selectedService}
+        />
+      </div>
+    </MotionConfig>
   );
 }

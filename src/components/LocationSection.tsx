@@ -3,13 +3,14 @@
 import { salonConfig } from "@/config/salon.config";
 import { MapPin, Clock, Phone, Navigation, Mail } from "lucide-react";
 import { InstagramIcon } from "./SocialIcons";
+import { FadeIn } from "./MotionPrimitives";
 
 export default function LocationSection() {
   return (
     <section id="location" className="py-16 sm:py-24 bg-[#FDF7F8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-14">
+        <FadeIn className="text-center max-w-3xl mx-auto mb-14">
           <span className="text-xs uppercase tracking-widest text-[#84233C] font-bold">
             Επισκεφθείτε Μας στον Χολαργό
           </span>
@@ -17,13 +18,13 @@ export default function LocationSection() {
             Τοποθεσία & Ωράριο Λειτουργίας
           </h2>
           <p className="text-sm sm:text-base text-[#6C565E] mt-3">
-            Σας περιμένουμε στη Λεωφόρο Περικλέους 56 στον Χολαργό σε έναν φωτεινό και άνετο χώρο με εύκολη πρόσβαση.
+            Σας περιμένουμε στη Λεωφόρο Περικλέους 56 (Holargos Center, 2ος όροφος) σε έναν φωτεινό και άνετο χώρο με εύκολη πρόσβαση.
           </p>
-        </div>
+        </FadeIn>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           {/* Info Card: Left (5 Cols) */}
-          <div className="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 border border-[#F2E5E8] shadow-xs flex flex-col justify-between space-y-6">
+          <FadeIn direction="right" className="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 border border-[#F2E5E8] shadow-xs flex flex-col justify-between space-y-6">
             {/* Address */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#84233C]">
@@ -106,10 +107,10 @@ export default function LocationSection() {
                 </a>
               </div>
             </div>
-          </div>
+          </FadeIn>
 
           {/* Interactive Map Embed: Right (7 Cols) */}
-          <div className="lg:col-span-7 rounded-3xl overflow-hidden border border-[#F2E5E8] shadow-xs min-h-[380px] lg:min-h-full relative bg-gray-100">
+          <FadeIn direction="left" delay={0.1} className="lg:col-span-7 rounded-3xl overflow-hidden border border-[#F2E5E8] shadow-xs min-h-[380px] lg:min-h-full relative bg-gray-100">
             <iframe
               src={salonConfig.contact.googleMapsEmbedUrl}
               width="100%"
@@ -121,7 +122,7 @@ export default function LocationSection() {
               title="Neta Nails Cholargos Location Map"
               className="w-full h-full"
             />
-          </div>
+          </FadeIn>
         </div>
       </div>
     </section>

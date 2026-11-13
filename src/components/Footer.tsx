@@ -94,7 +94,7 @@ export default function Footer() {
               Επικοινωνία
             </h4>
             <div className="space-y-2 text-xs sm:text-sm text-stone-400">
-              <p>📍 {salonConfig.contact.address.street}</p>
+              <p>📍 {salonConfig.contact.address.street} ({salonConfig.contact.address.area})</p>
               <p>🏙️ {salonConfig.contact.address.city} {salonConfig.contact.address.postalCode}</p>
               <p>📞 {salonConfig.contact.phone}</p>
               <p>📸 Instagram: {salonConfig.contact.socials.instagramHandle}</p>

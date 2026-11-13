@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { salonConfig } from "@/config/salon.config";
 import { Phone, Calendar, Menu, X } from "lucide-react";
 
@@ -81,13 +82,15 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
               <span>{salonConfig.contact.phone}</span>
             </a>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={onOpenBooking}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#84233C] via-[#9E354E] to-[#84233C] hover:from-[#6F1A30] hover:to-[#84233C] text-white text-xs uppercase tracking-wider font-semibold rounded-full shadow-sm hover:shadow-md transition-all transform hover:-translate-y-0.5 cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#84233C] via-[#A33A53] to-[#84233C] btn-luxury-shimmer text-white text-xs uppercase tracking-wider font-semibold rounded-full shadow-sm hover:shadow-md cursor-pointer"
             >
               <Calendar className="w-3.5 h-3.5" />
               <span>Κλείσε Ραντεβού</span>
-            </button>
+            </motion.button>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -110,43 +113,53 @@ export default function Navbar({ onOpenBooking }: NavbarProps) {
       </div>
 
       {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="sm:hidden bg-white border-b border-[#F2E5E8] px-4 pt-3 pb-6 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex flex-col space-y-2">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-2 text-base font-medium text-[#5E4D53] hover:text-[#84233C] border-b border-gray-100"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="sm:hidden bg-white border-b border-[#F2E5E8] px-4 overflow-hidden"
+          >
+            <div className="pt-3 pb-6 space-y-3">
+              <div className="flex flex-col space-y-2">
+                {navLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="py-2 text-base font-medium text-[#5E4D53] hover:text-[#84233C] border-b border-gray-100"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
 
-          <div className="pt-2 flex flex-col gap-2">
-            <a
-              href={`tel:${salonConfig.contact.phone.replace(/\s+/g, "")}`}
-              className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-[#541223] bg-[#FAF0F3] border border-[#F2D8DE] rounded-xl"
-            >
-              <Phone className="w-4 h-4 text-[#84233C]" />
-              <span>Κάλεσε: {salonConfig.contact.phone}</span>
-            </a>
+              <div className="pt-2 flex flex-col gap-2">
+                <a
+                  href={`tel:${salonConfig.contact.phone.replace(/\s+/g, "")}`}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-[#541223] bg-[#FAF0F3] border border-[#F2D8DE] rounded-xl"
+                >
+                  <Phone className="w-4 h-4 text-[#84233C]" />
+                  <span>Κάλεσε: {salonConfig.contact.phone}</span>
+                </a>
 
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenBooking();
-              }}
-              className="w-full py-3 bg-[#84233C] text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 shadow-sm"
-            >
-              <Calendar className="w-4 h-4" />
-              <span>Κλείσε Online Ραντεβού</span>
-            </button>
-          </div>
-        </div>
-      )}
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenBooking();
+                  }}
+                  className="w-full py-3 bg-[#84233C] text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>Κλείσε Online Ραντεβού</span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

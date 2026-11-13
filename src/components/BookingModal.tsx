@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { salonConfig, ServiceItem } from "@/config/salon.config";
 import {
   X,
@@ -16,6 +17,7 @@ import {
   CalendarCheck,
   AlertCircle,
   Scissors,
+  Star,
 } from "lucide-react";
 
 interface BookingModalProps {
@@ -142,8 +144,6 @@ export default function BookingModal({
     };
   }, [date, selectedServiceId, selectedStaffId, isOpen]);
 
-  if (!isOpen) return null;
-
   // Handle final appointment submission
   const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,9 +224,25 @@ export default function BookingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      {/* Modal Card */}
-      <div className="relative w-full max-w-xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[#F2D8DE] overflow-hidden max-h-[94vh] flex flex-col">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={handleResetAndClose}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
+        >
+          {/* Modal Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 28, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.97 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[#F2D8DE] overflow-hidden max-h-[94vh] flex flex-col"
+          >
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-[#541223] via-[#721B32] to-[#8E253F] text-white p-5 sm:p-6 relative">
           <button
@@ -380,23 +396,34 @@ export default function BookingModal({
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#6C565E] mb-1.5">
                   2. Επιλέξτε Τεχνίτρια
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setSelectedStaffId("any")}
-                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
                       selectedStaffId === "any"
                         ? "bg-[#84233C] text-white border-[#84233C] shadow-sm"
                         : "bg-[#FDF8F9] text-[#1E1518] border-[#F2D8DE] hover:border-[#D38CA0]"
                     }`}
                   >
-                    <div className="text-xs font-semibold">✨ Πρώτη Διαθέσιμη</div>
                     <div
-                      className={`text-[10px] truncate ${
-                        selectedStaffId === "any" ? "text-white/80" : "text-[#6C565E]"
+                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
+                        selectedStaffId === "any"
+                          ? "bg-white/20 text-white"
+                          : "bg-[#FAF0F3] text-[#84233C]"
                       }`}
                     >
-                      Ταχύτερο ραντεβού
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold truncate">Πρώτη Διαθέσιμη</div>
+                      <div
+                        className={`text-[10px] truncate ${
+                          selectedStaffId === "any" ? "text-white/80" : "text-[#6C565E]"
+                        }`}
+                      >
+                        Ταχύτερο ραντεβού
+                      </div>
                     </div>
                   </button>
 
@@ -405,19 +432,42 @@ export default function BookingModal({
                       key={staff.id}
                       type="button"
                       onClick={() => setSelectedStaffId(staff.id)}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
                         selectedStaffId === staff.id
                           ? "bg-[#84233C] text-white border-[#84233C] shadow-sm"
                           : "bg-[#FDF8F9] text-[#1E1518] border-[#F2D8DE] hover:border-[#D38CA0]"
                       }`}
                     >
-                      <div className="text-xs font-semibold">{staff.name}</div>
                       <div
-                        className={`text-[10px] truncate ${
-                          selectedStaffId === staff.id ? "text-white/80" : "text-[#6C565E]"
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold ${
+                          selectedStaffId === staff.id
+                            ? "bg-white/20 text-white"
+                            : "bg-[#FAF0F3] text-[#84233C] border border-[#F2D8DE]"
                         }`}
                       >
-                        {staff.role.split(" ")[0]}
+                        {staff.initials || staff.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-semibold truncate">{staff.name}</span>
+                          {staff.rating && (
+                            <span
+                              className={`inline-flex items-center gap-0.5 text-[10px] font-bold shrink-0 ${
+                                selectedStaffId === staff.id ? "text-amber-300" : "text-[#84233C]"
+                              }`}
+                            >
+                              <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                              {staff.rating}
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className={`text-[10px] truncate ${
+                            selectedStaffId === staff.id ? "text-white/80" : "text-[#6C565E]"
+                          }`}
+                        >
+                          {staff.reviewCount ? `${staff.reviewCount} κριτικές` : staff.role.split(" ")[0]}
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -431,7 +481,7 @@ export default function BookingModal({
                     3. Ημερομηνία & Ώρα
                   </label>
                   <span className="text-[11px] text-[#84233C] font-medium">
-                    Τρίτη - Παρασκευή: 10-20 | Σάβ: 9-17
+                    Τρίτη - Σάββατο: 09:00 - 20:00
                   </span>
                 </div>
 
@@ -571,7 +621,9 @@ export default function BookingModal({
             </form>
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
